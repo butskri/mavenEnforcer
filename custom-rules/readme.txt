@@ -1,0 +1,39 @@
+How to use?
+<project>
+...
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<version>1.3.1</version>
+				<dependencies>
+					<dependency>
+						<groupId>be.butskri.maven.enforcer</groupId>
+						<artifactId>custom-rules</artifactId>
+						<version>0.0.1-SNAPSHOT</version>
+					</dependency>
+				</dependencies>
+				<executions>
+					<execution>
+						<id>enforce-only-one-version-of-artifact-on-classpath</id>
+						<configuration>
+							<rules>
+								<myCustomRule implementation="be.butskri.maven.enforcer.custom.rules.OnlyOneVersionOnClasspathRule">
+									<dependenciesToBeChecked>
+										<dependency>com.google*</dependency>
+										<dependency>junit:*:*</dependency>
+									</dependenciesToBeChecked>
+								</myCustomRule>
+							</rules>
+						</configuration>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+...
+</project>
