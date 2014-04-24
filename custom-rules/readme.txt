@@ -19,7 +19,7 @@ How to use?
 						<id>enforce-only-one-version-of-artifact-on-classpath</id>
 						<configuration>
 							<rules>
-								<myCustomRule implementation="be.butskri.maven.enforcer.custom.rules.OnlyOneVersionOnClasspathRule">
+								<myCustomRule implementation="be.butskri.maven.enforcer.custom.rules.FindDuplicateDependenciesWithDifferentVersions">
 									<dependenciesToBeChecked>
 										<dependency>com.google*</dependency>
 										<dependency>junit:*:*</dependency>

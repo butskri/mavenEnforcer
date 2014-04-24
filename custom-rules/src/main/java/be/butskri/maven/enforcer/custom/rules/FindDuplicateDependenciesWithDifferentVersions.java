@@ -14,13 +14,17 @@ import org.codehaus.plexus.component.configurator.expression.ExpressionEvaluatio
 import be.butskri.maven.enforcer.custom.rules.appender.LogLevel;
 import be.butskri.maven.enforcer.custom.rules.domain.ConflictingArtifact;
 import be.butskri.maven.enforcer.custom.rules.domain.ConflictingArtifactsBuilder;
+import be.butskri.maven.enforcer.custom.rules.domain.DependencyNode;
+import be.butskri.maven.enforcer.custom.rules.domain.DependencyNodeByArtifactRegexFilter;
 import be.butskri.maven.enforcer.custom.rules.domain.FullDependencyTree;
 import be.butskri.maven.enforcer.custom.rules.domain.FullDependencyTreeBuilder;
+
+import com.google.common.base.Predicate;
 
 public class FindDuplicateDependenciesWithDifferentVersions implements EnforcerRule {
 
 	private Set<String> dependenciesToBeChecked = new HashSet<String>();
-	private ArtifactNameFilter artifactNameFilter;
+	private DependencyNodeByArtifactRegexFilter dependencyNodeFilter;
 
 	public void setDependenciesToBeChecked(Set<String> dependenciesToBeChecked) {
 		this.dependenciesToBeChecked = dependenciesToBeChecked;
@@ -62,7 +66,14 @@ public class FindDuplicateDependenciesWithDifferentVersions implements EnforcerR
 	}
 
 	private Collection<ConflictingArtifact> findConflictingArtifacts(FullDependencyTree tree) {
-		return new ConflictingArtifactsBuilder(tree).build();
+		return new ConflictingArtifactsBuilder(tree, dependencyNodeFilter()).build();
+	}
+
+	private Predicate<DependencyNode> dependencyNodeFilter() {
+		if (dependencyNodeFilter == null) {
+			dependencyNodeFilter = new DependencyNodeByArtifactRegexFilter(dependenciesToBeChecked);
+		}
+		return dependencyNodeFilter;
 	}
 
 	public boolean isCacheable() {

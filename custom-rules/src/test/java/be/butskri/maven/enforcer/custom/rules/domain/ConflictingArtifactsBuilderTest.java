@@ -7,6 +7,8 @@ import java.util.HashSet;
 
 import org.junit.Test;
 
+import com.google.common.base.Predicate;
+
 public class ConflictingArtifactsBuilderTest {
 
 	@Test
@@ -37,13 +39,22 @@ public class ConflictingArtifactsBuilderTest {
 				.withDependentComponent(dependencyNode("someOtherUniqueGroupId:someOtherUniqueArtifactId:jar:4.0.0", "compile"));
 		FullDependencyTree fullTree = new FullDependencyTree(root);
 
-		Collection<ConflictingArtifact> conflictingArtifacts = new ConflictingArtifactsBuilder(fullTree).build();
+		Collection<ConflictingArtifact> conflictingArtifacts = new ConflictingArtifactsBuilder(fullTree, alwaysTruePredicate()).build();
 		assertThat(conflictingArtifacts).hasSize(2);
 
 		assertConflictingArtifact(conflictingArtifacts, "conflictingGroupId:conflictingArtifactId:jar", conflictingNode11,
 				conflictingNode12);
 		assertConflictingArtifact(conflictingArtifacts, "anotherConflictingGroupId:anotherConflictingArtifactId:jar", conflictingNode21,
 				conflictingNode22, conflictingNode23);
+	}
+
+	private Predicate<DependencyNode> alwaysTruePredicate() {
+		return new Predicate<DependencyNode>() {
+
+			public boolean apply(DependencyNode input) {
+				return true;
+			}
+		};
 	}
 
 	private void assertConflictingArtifact(Collection<ConflictingArtifact> conflictingArtifacts, String mavenArtifactId,

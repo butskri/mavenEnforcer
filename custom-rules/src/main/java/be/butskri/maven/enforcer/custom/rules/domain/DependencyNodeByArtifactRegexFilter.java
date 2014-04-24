@@ -1,17 +1,23 @@
-package be.butskri.maven.enforcer.custom.rules;
+package be.butskri.maven.enforcer.custom.rules.domain;
 
 import java.util.HashSet;
 import java.util.Set;
 
-public class ArtifactNameFilter {
+import com.google.common.base.Predicate;
+
+public class DependencyNodeByArtifactRegexFilter implements Predicate<DependencyNode> {
 
 	private Set<String> artifactNameRegExPatterns;
 
-	public ArtifactNameFilter(Set<String> dependencyFilterSet) {
+	public DependencyNodeByArtifactRegexFilter(Set<String> dependencyFilterSet) {
 		this.artifactNameRegExPatterns = toRegExPatterns(dependencyFilterSet);
 	}
 
-	public boolean allows(String fullArtifactName) {
+	public boolean apply(DependencyNode dependencyNode) {
+		return allows(dependencyNode.getFullMavenArtifactId().getMavenArtifactId().toString());
+	}
+
+	private boolean allows(String fullArtifactName) {
 		for (String regex : artifactNameRegExPatterns) {
 			if (fullArtifactName.matches(regex)) {
 				return true;

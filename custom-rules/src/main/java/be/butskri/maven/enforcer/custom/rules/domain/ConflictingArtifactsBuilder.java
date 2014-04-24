@@ -5,17 +5,22 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
+
 public class ConflictingArtifactsBuilder {
 
 	private FullDependencyTree fullTree;
+	private Predicate<DependencyNode> dependencyNodeFilter;
 
-	public ConflictingArtifactsBuilder(FullDependencyTree fullTree) {
+	public ConflictingArtifactsBuilder(FullDependencyTree fullTree, Predicate<DependencyNode> dependencyNodeFilter) {
 		this.fullTree = fullTree;
+		this.dependencyNodeFilter = dependencyNodeFilter;
 	}
 
 	public Collection<ConflictingArtifact> build() {
 		Map<MavenArtifactId, ConflictingArtifact> conflictingArtifacts = new HashMap<MavenArtifactId, ConflictingArtifact>();
-		for (DependencyNode dependencyNode : fullTree.getAllDependentNodes()) {
+		for (DependencyNode dependencyNode : Collections2.filter(fullTree.getAllDependentNodes(), dependencyNodeFilter)) {
 			MavenArtifactId mavenArtifactId = dependencyNode.getFullMavenArtifactId().getMavenArtifactId();
 			ConflictingArtifact conflictingArtifact = conflictingArtifacts.get(mavenArtifactId);
 			if (conflictingArtifact == null) {
