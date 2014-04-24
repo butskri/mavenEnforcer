@@ -46,19 +46,35 @@
 						<artifactId>custom-rules</artifactId>
 						<version>1.0.0-SNAPSHOT</version>
 					</dependency>
+					<!-- 
+					<dependency>
+						<groupId>org.codehaus.plexus</groupId>
+						<artifactId>plexus-classworlds</artifactId>
+						<version>2.4</version>
+					</dependency>
+					<dependency>
+						<groupId>org.apache.maven</groupId>
+						<artifactId>maven-aether-provider</artifactId>
+						<version>3.2.1</version>
+					</dependency>
+					 -->
 				</dependencies>
 				<executions>
 					<execution>
 						<id>enforce-only-one-version-of-artifact-on-classpath</id>
 						<configuration>
 							<rules>
+							<!-- 
 								<myCustomRule implementation="be.butskri.maven.enforcer.custom.rules.OnlyOneVersionOnClasspathRule">
+								<myCustomRule implementation="be.butskri.maven.enforcer.custom.rules.CheckDependenciesRule">
+								 -->
+								<myCustomRule implementation="be.butskri.maven.enforcer.custom.rules.FindDuplicateDependenciesWithDifferentVersions">
+								<!-- 
 									<dependenciesToBeChecked>
-									<!-- uncomment when you want the build to fail
 										<dependency>com.google</dependency>
-										-->
 										<dependency>junit</dependency>
 									</dependenciesToBeChecked>
+									 -->
 								</myCustomRule>
 							</rules>
 						</configuration>
