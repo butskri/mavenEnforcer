@@ -1,60 +1,43 @@
 package be.butskri.maven.enforcer.custom.rules.domain;
 
 import static org.fest.assertions.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.HashSet;
-import java.util.Set;
 
+import org.junit.Before;
 import org.junit.Test;
 
 public class DependencyNodeByArtifactRegexFilterTest {
 
-	@Test
-	public void artifactFilterAllowsGeeftAlleenTrueTerugIndienPatternMatcht() {
-		assertThat(createFilter("be.argenta").apply(node("be.argenta.component:core-component:jar"))).isTrue();
-		assertThat(createFilter("be.argenta").apply(node("com.argenta.component:core-component:jar"))).isFalse();
+	private MavenArtifactIdRegexFilter artifactIdRegexFilterMock;
+	private DependencyNodeByArtifactRegexFilter filter;
+
+	@Before
+	public void setUp() {
+		artifactIdRegexFilterMock = mock(MavenArtifactIdRegexFilter.class);
+		filter = new DependencyNodeByArtifactRegexFilter(artifactIdRegexFilterMock);
 	}
 
 	@Test
-	public void artifactFilterAllowsGeeftTrueTerugIndienMinstensEenPatternMatcht() {
-		assertThat(createFilter("be.argenta", "com.argenta").apply(node("net.argenta.component:core-component:jar"))).isFalse();
-		assertThat(createFilter("be.argenta", "com.argenta").apply(node("com.argenta.component:core-component:jar"))).isTrue();
+	public void artifactFilterAllowsGeeftTrueTerugIndienPatternMatcht() {
+		MavenArtifactId artifactId = MavenArtifactId.fromString("be.argenta.component:core-component:jar");
+		when(artifactIdRegexFilterMock.apply(artifactId)).thenReturn(true);
+
+		assertThat(filter.apply(node(artifactId))).isTrue();
 	}
 
 	@Test
-	public void puntWordtGeEscaped() {
-		assertThat(createFilter("be.argenta.component:core-component:jar").apply(node("be.argenta.component:core-component:jar")))
-				.isTrue();
-		assertThat(createFilter("be.argenta.component:core-component:jar").apply(node("be.argentahcomponent:core-component:jar")))
-				.isFalse();
+	public void artifactFilterAllowsGeeftFalseTerugIndienPatternNietMatcht() {
+		MavenArtifactId artifactId = MavenArtifactId.fromString("be.argenta.component:core-component:jar");
+		when(artifactIdRegexFilterMock.apply(artifactId)).thenReturn(false);
+
+		assertThat(filter.apply(node(artifactId))).isFalse();
 	}
 
-	@Test
-	public void artifactFilterKanGebruikMakenVanSterrekeAlsWildCard() {
-		assertThat(createFilter("be.argenta*:core-component:jar").apply(node("com.argenta.component:core-component:jar"))).isFalse();
-		assertThat(createFilter("be.argenta*:core-*:jar").apply(node("be.argenta.component:score-component:jar"))).isFalse();
-		assertThat(createFilter("be.argenta*:core-component:jar").apply(node("com.argenta.component:core-component:jar"))).isFalse();
-
-		assertThat(createFilter("be.argenta*").apply(node("be.argenta.component:core-component:jar"))).isTrue();
-		assertThat(createFilter("be.argenta*:core-component:jar").apply(node("be.argenta.component:core-component:jar"))).isTrue();
-		assertThat(createFilter("be.argenta*:core-*:jar").apply(node("be.argenta.component:core-component:jar"))).isTrue();
-		assertThat(createFilter("be.argenta*:core-*:*").apply(node("be.argenta.component:core-component:jar"))).isTrue();
-	}
-
-	private DependencyNodeByArtifactRegexFilter createFilter(String... allowedPatterns) {
-		return new DependencyNodeByArtifactRegexFilter(toSet(allowedPatterns));
-	}
-
-	private Set<String> toSet(String... allowedPatterns) {
-		Set<String> result = new HashSet<String>();
-		for (String pattern : allowedPatterns) {
-			result.add(pattern);
-		}
-		return result;
-	}
-
-	private DependencyNode node(String mavenArtifactId) {
-		return new DependencyNode(new FullMavenArtifactId(MavenArtifactId.fromString(mavenArtifactId), "1.0.0"),
+	private DependencyNode node(MavenArtifactId mavenArtifactId) {
+		return new DependencyNode(new FullMavenArtifactId(mavenArtifactId, "1.0.0"),
 				new HashSet<MavenArtifactId>());
 	}
 }

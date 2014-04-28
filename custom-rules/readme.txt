@@ -20,10 +20,23 @@ How to use?
 						<configuration>
 							<rules>
 								<myCustomRule implementation="be.butskri.maven.enforcer.custom.rules.FindDuplicateDependenciesWithDifferentVersions">
-									<dependenciesToBeChecked>
-										<dependency>com.google*</dependency>
-										<dependency>junit:*:*</dependency>
-									</dependenciesToBeChecked>
+									<showTree>true</showTree>
+									<includePathsToBeChecked>
+										<pattern>pathPattern1ToBeIncluded</pattern>
+										<pattern>pathPattern2ToBeIncluded</pattern>
+									</includePathsToBeChecked>
+									<excludePathsToBeChecked>
+										<pattern>pathPattern1ToBeExcluded</pattern>
+										<pattern>pathPattern2ToBeExcluded</pattern>
+									</excludePathsToBeChecked>
+									<includeDependenciesToBeChecked>
+										<pattern>dependencyPattern1ToBeIncluded</pattern>
+										<pattern>dependencyPattern2ToBeIncluded</pattern>
+									</includeDependenciesToBeChecked>
+									<excludeDependenciesToBeChecked>
+										<pattern>dependencyPattern1ToBeExcluded</pattern>
+										<pattern>dependencyPattern2ToBeExcluded</pattern>
+									</excludeDependenciesToBeChecked>
 								</myCustomRule>
 							</rules>
 						</configuration>

@@ -65,10 +65,20 @@
 						<configuration>
 							<rules>
 								<myCustomRule implementation="be.butskri.maven.enforcer.custom.rules.FindDuplicateDependenciesWithDifferentVersions">
-									<dependenciesToBeChecked>
-										<dependency>com.google</dependency>
-										<dependency>junit</dependency>
-									</dependenciesToBeChecked>
+									<showTree>true</showTree>
+									<includePathsToBeChecked>
+										<pattern>*</pattern>
+									</includePathsToBeChecked>
+									<excludePathsToBeChecked>
+										<pattern>none</pattern>
+									</excludePathsToBeChecked>
+									<includeDependenciesToBeChecked>
+										<pattern>com.google</pattern>
+										<pattern>junit</pattern>
+									</includeDependenciesToBeChecked>
+									<excludeDependenciesToBeChecked>
+										<pattern>none</pattern>
+									</excludeDependenciesToBeChecked>
 								</myCustomRule>
 							</rules>
 						</configuration>

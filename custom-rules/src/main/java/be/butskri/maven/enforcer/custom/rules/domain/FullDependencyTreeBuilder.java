@@ -8,16 +8,20 @@ import org.apache.maven.enforcer.rule.api.EnforcerRuleHelper;
 import org.apache.maven.project.MavenProject;
 import org.eclipse.aether.graph.Dependency;
 
+import com.google.common.base.Predicate;
+
 public class FullDependencyTreeBuilder {
 
 	private MavenProject mavenProject;
 	private DependencyRepository dependencyRepository;
 	private EnforcerRuleHelper helper;
+	private final Predicate<MavenArtifactId> artifactsFilter;
 
-	public FullDependencyTreeBuilder(MavenProject mavenProject, EnforcerRuleHelper helper) {
+	public FullDependencyTreeBuilder(MavenProject mavenProject, EnforcerRuleHelper helper, Predicate<MavenArtifactId> artifactsFilter) {
 		this.mavenProject = mavenProject;
 		this.dependencyRepository = DependencyRepository.getRepository(helper);
 		this.helper = helper;
+		this.artifactsFilter = artifactsFilter;
 	}
 
 	public FullDependencyTree build() {
@@ -63,7 +67,7 @@ public class FullDependencyTreeBuilder {
 	}
 
 	private void addDependentComponent(DependencyNode result, FullMavenArtifactId mavenArtifactId, String scope) {
-		if (!result.heeftInPath(mavenArtifactId) && !"test".equals(scope)) {
+		if (artifactsFilter.apply(mavenArtifactId.getMavenArtifactId()) && !result.heeftInPath(mavenArtifactId) && !"test".equals(scope)) {
 			helper.getLog().debug("adding " + mavenArtifactId + " to " + result.getFullMavenArtifactId());
 			result.withDependentComponent(buildDependentComponent(result, mavenArtifactId, scope));
 		}

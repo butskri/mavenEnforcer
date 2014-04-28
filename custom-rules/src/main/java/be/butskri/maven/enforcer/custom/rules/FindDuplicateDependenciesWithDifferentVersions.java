@@ -1,7 +1,6 @@
 package be.butskri.maven.enforcer.custom.rules;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.maven.enforcer.rule.api.EnforcerRule;
@@ -12,22 +11,45 @@ import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.component.configurator.expression.ExpressionEvaluationException;
 
 import be.butskri.maven.enforcer.custom.rules.appender.LogLevel;
+import be.butskri.maven.enforcer.custom.rules.appender.LoggingStringAppender;
 import be.butskri.maven.enforcer.custom.rules.domain.ConflictingArtifact;
 import be.butskri.maven.enforcer.custom.rules.domain.ConflictingArtifactsBuilder;
 import be.butskri.maven.enforcer.custom.rules.domain.DependencyNode;
 import be.butskri.maven.enforcer.custom.rules.domain.DependencyNodeByArtifactRegexFilter;
 import be.butskri.maven.enforcer.custom.rules.domain.FullDependencyTree;
 import be.butskri.maven.enforcer.custom.rules.domain.FullDependencyTreeBuilder;
+import be.butskri.maven.enforcer.custom.rules.domain.MavenArtifactIdRegexFilter;
 
 import com.google.common.base.Predicate;
 
 public class FindDuplicateDependenciesWithDifferentVersions implements EnforcerRule {
 
-	private Set<String> dependenciesToBeChecked = new HashSet<String>();
-	private DependencyNodeByArtifactRegexFilter dependencyNodeFilter;
+	private boolean showTree = false;
+	private Set<String> includePathsToBeChecked;
+	private Set<String> excludePathsToBeChecked;
+	private Set<String> includeDependenciesToBeChecked;
+	private Set<String> excludeDependenciesToBeChecked;
+	private MavenArtifactIdRegexFilter pathsToBeCheckedFilter;
+	private DependencyNodeByArtifactRegexFilter dependenciesToBeCheckedFilter;
 
-	public void setDependenciesToBeChecked(Set<String> dependenciesToBeChecked) {
-		this.dependenciesToBeChecked = dependenciesToBeChecked;
+	public void setShowTree(boolean showTree) {
+		this.showTree = showTree;
+	}
+
+	public void setIncludeDependenciesToBeChecked(Set<String> includeDependenciesToBeChecked) {
+		this.includeDependenciesToBeChecked = includeDependenciesToBeChecked;
+	}
+
+	public void setExcludeDependenciesToBeChecked(Set<String> excludeDependenciesToBeChecked) {
+		this.excludeDependenciesToBeChecked = excludeDependenciesToBeChecked;
+	}
+
+	public void setIncludePathsToBeChecked(Set<String> includePathsToBeChecked) {
+		this.includePathsToBeChecked = includePathsToBeChecked;
+	}
+
+	public void setExcludePathsToBeChecked(Set<String> excludePathsToBeChecked) {
+		this.excludePathsToBeChecked = excludePathsToBeChecked;
 	}
 
 	public void execute(EnforcerRuleHelper helper) throws EnforcerRuleException {
@@ -46,13 +68,26 @@ public class FindDuplicateDependenciesWithDifferentVersions implements EnforcerR
 
 	private FullDependencyTree buildFullDependencyTree(EnforcerRuleHelper helper, MavenProject project) {
 		Log log = helper.getLog();
-		log.debug("builden van tree...");
-		FullDependencyTree tree = new FullDependencyTreeBuilder(project, helper).build();
-		log.debug("tree gebuild.");
-		log.debug("printen tree ...");
-		tree.print(log, LogLevel.DEBUG);
-		log.debug("tree geprint.");
+		log.debug("building tree...");
+		FullDependencyTree tree = new FullDependencyTreeBuilder(project, helper, pathsToBeCheckedFilter()).build();
+		log.debug("tree was built.");
+		printTree(log, tree);
 		return tree;
+	}
+
+	private void printTree(Log log, FullDependencyTree tree) {
+		LogLevel logLevel = determineLogLevelForPrintingTree();
+		LoggingStringAppender loggingStringAppender = new LoggingStringAppender(log, logLevel);
+		loggingStringAppender.append("--found tree:");
+		tree.print(log, logLevel);
+		loggingStringAppender.append("--end of tree");
+	}
+
+	private LogLevel determineLogLevelForPrintingTree() {
+		if (showTree) {
+			return LogLevel.INFO;
+		}
+		return LogLevel.DEBUG;
 	}
 
 	private String buildMessage(MavenProject project, Collection<ConflictingArtifact> conflictingArtifacts) {
@@ -66,14 +101,22 @@ public class FindDuplicateDependenciesWithDifferentVersions implements EnforcerR
 	}
 
 	private Collection<ConflictingArtifact> findConflictingArtifacts(FullDependencyTree tree) {
-		return new ConflictingArtifactsBuilder(tree, dependencyNodeFilter()).build();
+		return new ConflictingArtifactsBuilder(tree, dependenciesToBeCheckedFilter()).build();
 	}
 
-	private Predicate<DependencyNode> dependencyNodeFilter() {
-		if (dependencyNodeFilter == null) {
-			dependencyNodeFilter = new DependencyNodeByArtifactRegexFilter(dependenciesToBeChecked);
+	private Predicate<DependencyNode> dependenciesToBeCheckedFilter() {
+		if (dependenciesToBeCheckedFilter == null) {
+			dependenciesToBeCheckedFilter = DependencyNodeByArtifactRegexFilter.dependencyNodeByArtifactRegexFilter(
+					includeDependenciesToBeChecked, excludeDependenciesToBeChecked);
 		}
-		return dependencyNodeFilter;
+		return dependenciesToBeCheckedFilter;
+	}
+
+	private MavenArtifactIdRegexFilter pathsToBeCheckedFilter() {
+		if (pathsToBeCheckedFilter == null) {
+			pathsToBeCheckedFilter = new MavenArtifactIdRegexFilter(includePathsToBeChecked, excludePathsToBeChecked);
+		}
+		return pathsToBeCheckedFilter;
 	}
 
 	public boolean isCacheable() {
