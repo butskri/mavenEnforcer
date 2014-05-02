@@ -16,6 +16,8 @@ import be.butskri.maven.enforcer.custom.rules.domain.ConflictingArtifact;
 import be.butskri.maven.enforcer.custom.rules.domain.ConflictingArtifactsBuilder;
 import be.butskri.maven.enforcer.custom.rules.domain.DependencyNode;
 import be.butskri.maven.enforcer.custom.rules.domain.DependencyNodeByArtifactRegexFilter;
+import be.butskri.maven.enforcer.custom.rules.domain.DependencyNodeRepository;
+import be.butskri.maven.enforcer.custom.rules.domain.DependencyRepository;
 import be.butskri.maven.enforcer.custom.rules.domain.FullDependencyTree;
 import be.butskri.maven.enforcer.custom.rules.domain.FullDependencyTreeBuilder;
 import be.butskri.maven.enforcer.custom.rules.domain.MavenArtifactIdRegexFilter;
@@ -69,7 +71,9 @@ public class FindDuplicateDependenciesWithDifferentVersions implements EnforcerR
 	private FullDependencyTree buildFullDependencyTree(EnforcerRuleHelper helper, MavenProject project) {
 		Log log = helper.getLog();
 		log.debug("building tree...");
-		FullDependencyTree tree = new FullDependencyTreeBuilder(project, helper, pathsToBeCheckedFilter()).build();
+		DependencyNodeRepository dependencyNodeRepository = new DependencyNodeRepository(project,
+				DependencyRepository.getRepository(helper));
+		FullDependencyTree tree = new FullDependencyTreeBuilder(project, dependencyNodeRepository, pathsToBeCheckedFilter()).build();
 		log.debug("tree was built.");
 		printTree(log, tree);
 		return tree;

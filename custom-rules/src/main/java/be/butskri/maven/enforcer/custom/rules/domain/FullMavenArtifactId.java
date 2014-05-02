@@ -1,10 +1,15 @@
 package be.butskri.maven.enforcer.custom.rules.domain;
 
+import static be.butskri.maven.enforcer.custom.rules.domain.MavenArtifactId.mavenArtifactIdFrom;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.project.MavenProject;
+import org.eclipse.aether.graph.Dependency;
 
 public class FullMavenArtifactId {
 
@@ -21,6 +26,20 @@ public class FullMavenArtifactId {
 		}
 		MavenArtifactId mavenArtifactId = new MavenArtifactId(matcher.group(1), matcher.group(2), matcher.group(3));
 		return new FullMavenArtifactId(mavenArtifactId, matcher.group(4));
+	}
+
+	public static FullMavenArtifactId fullMavenArtifactIdFrom(MavenProject aMavenProject) {
+		return new FullMavenArtifactId(new MavenArtifactId(aMavenProject.getGroupId(), aMavenProject.getArtifactId(),
+				aMavenProject.getPackaging()), aMavenProject.getVersion());
+	}
+
+	public static FullMavenArtifactId fullMavenArtifactIdFrom(Artifact artifact) {
+		return new FullMavenArtifactId(mavenArtifactIdFrom(artifact), artifact.getVersion());
+	}
+
+	public static FullMavenArtifactId fullMavenArtifactIdFrom(Dependency dependency) {
+		return new FullMavenArtifactId(new MavenArtifactId(dependency.getArtifact().getGroupId(), dependency.getArtifact().getArtifactId(),
+				dependency.getArtifact().getExtension()), dependency.getArtifact().getVersion());
 	}
 
 	public FullMavenArtifactId(MavenArtifactId mavenArtifactId, String version) {
@@ -51,7 +70,7 @@ public class FullMavenArtifactId {
 		return new StringBuilder().append(mavenArtifactId.toString()).append(":").append(version).toString();
 	}
 
-	public boolean heeftVersieRange() {
+	public boolean hasRangedVersion() {
 		return version.contains("[") || version.contains("(") || version.contains("]") || version.contains(")");
 	}
 

@@ -187,4 +187,11 @@ public class DependencyNode {
 		}
 		return String.format("%s > %s", parentNode.toString(), fullMavenArtifactId.toString());
 	}
+
+	public boolean isRecursive() {
+		if (parentNode == null) {
+			return false;
+		}
+		return parentNode.hasInPath(getFullMavenArtifactId());
+	}
 }

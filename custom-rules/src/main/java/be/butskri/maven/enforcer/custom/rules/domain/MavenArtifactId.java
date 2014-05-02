@@ -5,6 +5,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.maven.artifact.Artifact;
 
 public class MavenArtifactId {
 
@@ -20,6 +21,14 @@ public class MavenArtifactId {
 			throw new IllegalArgumentException(String.format("artifactId %s matcht niet met pattern (groupId:artifactId:type)", string));
 		}
 		return new MavenArtifactId(matcher.group(1), matcher.group(2), matcher.group(3));
+	}
+
+	public static MavenArtifactId mavenArtifactIdFrom(Artifact artifact) {
+		return new MavenArtifactId(artifact.getGroupId(), artifact.getArtifactId(), artifact.getType());
+	}
+
+	public static MavenArtifactId mavenArtifactIdFrom(org.apache.maven.model.Dependency dependency) {
+		return new MavenArtifactId(dependency.getGroupId(), dependency.getArtifactId(), dependency.getType());
 	}
 
 	public MavenArtifactId(String groupId, String artifactId, String type) {
