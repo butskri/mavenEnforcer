@@ -21,16 +21,16 @@ public class DependencyNodeByArtifactRegexFilterTest {
 	}
 
 	@Test
-	public void artifactFilterAllowsGeeftTrueTerugIndienPatternMatcht() {
-		MavenArtifactId artifactId = MavenArtifactId.fromString("be.argenta.component:core-component:jar");
+	public void applyReturnsTrueWhenPatternMatches() {
+		MavenArtifactId artifactId = MavenArtifactId.fromString("be.butskri.component:core-component:jar");
 		when(artifactIdRegexFilterMock.apply(artifactId)).thenReturn(true);
 
 		assertThat(filter.apply(node(artifactId))).isTrue();
 	}
 
 	@Test
-	public void artifactFilterAllowsGeeftFalseTerugIndienPatternNietMatcht() {
-		MavenArtifactId artifactId = MavenArtifactId.fromString("be.argenta.component:core-component:jar");
+	public void applyReturnsFalseWhenPatternDoesNotMatch() {
+		MavenArtifactId artifactId = MavenArtifactId.fromString("be.butskri.component:core-component:jar");
 		when(artifactIdRegexFilterMock.apply(artifactId)).thenReturn(false);
 
 		assertThat(filter.apply(node(artifactId))).isFalse();
