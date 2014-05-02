@@ -4,6 +4,7 @@ import static org.fest.assertions.Assertions.assertThat;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 import org.junit.Test;
 
@@ -48,6 +49,25 @@ public class ConflictingArtifactsBuilderTest {
 				conflictingNode22, conflictingNode23);
 	}
 
+	@Test
+	public void noConflictingArtifactsWhenConflictingVersionIsExcluded() {
+		DependencyNode conflictingNode11 = dependencyNode("be.butskri:somethingconflicting:jar:3.0.0", "compile");
+		DependencyNode conflictingNode21 = dependencyNode("be.butskri:somethingconflicting:jar:4.0.0", "compile");
+
+		DependencyNode dependentComponent1 = dependencyNode("be.butskri:something:jar:1.0.0", "compile",
+				excluding("be.butskri:somethingconflicting"))
+				.withDependentComponent(conflictingNode11);
+		DependencyNode dependentComponent2 = dependencyNode("be.butskri:somethingelse:jar:1.0.0", "compile")
+				.withDependentComponent(conflictingNode21);
+		DependencyNode root = dependencyNode("be.butskri:rootArtifactId:jar:1.0.0")
+				.withDependentComponent(dependentComponent1)
+				.withDependentComponent(dependentComponent2);
+		FullDependencyTree fullTree = new FullDependencyTree(root);
+
+		Collection<ConflictingArtifact> conflictingArtifacts = new ConflictingArtifactsBuilder(fullTree, alwaysTruePredicate()).build();
+		assertThat(conflictingArtifacts).isEmpty();
+	}
+
 	private Predicate<DependencyNode> alwaysTruePredicate() {
 		return new Predicate<DependencyNode>() {
 
@@ -74,11 +94,29 @@ public class ConflictingArtifactsBuilderTest {
 
 	private DependencyNode dependencyNode(String fullMavenArtifactId, String scope) {
 		return new DependencyNode(FullMavenArtifactId.fromString(fullMavenArtifactId), scope,
-				new HashSet<MavenArtifactId>());
+				new HashSet<SimpleArtifactId>());
 	}
 
 	private DependencyNode dependencyNode(String fullMavenArtifactId) {
 		return new DependencyNode(FullMavenArtifactId.fromString(fullMavenArtifactId),
-				new HashSet<MavenArtifactId>());
+				new HashSet<SimpleArtifactId>());
 	}
+
+	private DependencyNode dependencyNode(String fullMavenArtifactId, String scope, String... excludedArtifactIds) {
+		Set<SimpleArtifactId> exclusions = excluding(excludedArtifactIds);
+		return dependencyNode(fullMavenArtifactId, scope, exclusions);
+	}
+
+	private DependencyNode dependencyNode(String fullMavenArtifactId, String scope, Set<SimpleArtifactId> exclusions) {
+		return new DependencyNode(FullMavenArtifactId.fromString(fullMavenArtifactId), scope, exclusions);
+	}
+
+	private Set<SimpleArtifactId> excluding(String... excludedArtifactIds) {
+		Set<SimpleArtifactId> exclusions = new HashSet<SimpleArtifactId>();
+		for (String excludedArtifactId : excludedArtifactIds) {
+			exclusions.add(SimpleArtifactId.fromString(excludedArtifactId));
+		}
+		return exclusions;
+	}
+
 }

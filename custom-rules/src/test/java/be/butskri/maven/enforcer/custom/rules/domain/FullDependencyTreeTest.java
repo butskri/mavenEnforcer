@@ -50,7 +50,7 @@ public class FullDependencyTreeTest {
 	}
 
 	private DependencyNode dependencyNode(String fullMavenArtifactId, String scope) {
-		return new DependencyNode(FullMavenArtifactId.fromString(fullMavenArtifactId), scope, new HashSet<MavenArtifactId>());
+		return new DependencyNode(FullMavenArtifactId.fromString(fullMavenArtifactId), scope, new HashSet<SimpleArtifactId>());
 	}
 
 }

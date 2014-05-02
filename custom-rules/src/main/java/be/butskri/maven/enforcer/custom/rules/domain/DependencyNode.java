@@ -18,23 +18,24 @@ public class DependencyNode {
 	private DependencyNode parentNode;
 	private FullMavenArtifactId fullMavenArtifactId;
 	private String scope;
-	private Set<MavenArtifactId> exclusions;
+	private Set<SimpleArtifactId> exclusions;
 	private List<DependencyNode> dependentComponents = new ArrayList<DependencyNode>();
 
 	public static DependencyNode emptyDependentComponent() {
-		return new DependencyNode(new FullMavenArtifactId(new MavenArtifactId("??", "??", "??"), "??"), Sets.<MavenArtifactId> newHashSet());
+		return new DependencyNode(new FullMavenArtifactId(new MavenArtifactId("??", "??", "??"), "??"),
+				Sets.<SimpleArtifactId> newHashSet());
 	}
 
-	public DependencyNode(FullMavenArtifactId fullMavenArtifactId, Set<MavenArtifactId> exclusions) {
+	public DependencyNode(FullMavenArtifactId fullMavenArtifactId, Set<SimpleArtifactId> exclusions) {
 		this.fullMavenArtifactId = fullMavenArtifactId;
 		this.exclusions = exclusions;
 	}
 
-	public DependencyNode(FullMavenArtifactId fullMavenArtifactId, String scope, Set<MavenArtifactId> exclusions) {
+	public DependencyNode(FullMavenArtifactId fullMavenArtifactId, String scope, Set<SimpleArtifactId> exclusions) {
 		this(null, fullMavenArtifactId, scope, exclusions);
 	}
 
-	public DependencyNode(DependencyNode parentNode, FullMavenArtifactId fullMavenArtifactId, String scope, Set<MavenArtifactId> exclusions) {
+	public DependencyNode(DependencyNode parentNode, FullMavenArtifactId fullMavenArtifactId, String scope, Set<SimpleArtifactId> exclusions) {
 		this.parentNode = parentNode;
 		this.fullMavenArtifactId = fullMavenArtifactId;
 		this.scope = scope;
@@ -49,7 +50,7 @@ public class DependencyNode {
 		return scope;
 	}
 
-	public Set<MavenArtifactId> getExclusions() {
+	public Set<SimpleArtifactId> getExclusions() {
 		return exclusions;
 	}
 
@@ -111,24 +112,49 @@ public class DependencyNode {
 		return result.toString();
 	}
 
-	public boolean heeftInPath(FullMavenArtifactId mavenArtifactId) {
+	public boolean hasInPath(FullMavenArtifactId mavenArtifactId) {
 		if (this.fullMavenArtifactId.equals(mavenArtifactId)) {
 			return true;
 		}
 		if (parentNode == null) {
 			return false;
 		}
-		return parentNode.heeftInPath(mavenArtifactId);
+		return parentNode.hasInPath(mavenArtifactId);
 	}
 
 	public Collection<DependencyNode> getAllDependentNodes() {
 		Set<DependencyNode> result = new HashSet<DependencyNode>();
 		for (DependencyNode dependencyNode : dependentComponents) {
-			result.add(dependencyNode);
-			result.addAll(dependencyNode.getAllDependentNodes());
+			if (!dependencyNode.isExcluded()) {
+				result.add(dependencyNode);
+				result.addAll(dependencyNode.getAllDependentNodes());
+			}
 		}
 
 		return result;
+	}
+
+	boolean isExcluded() {
+		if (parentNode == null) {
+			return false;
+		}
+		if (parentNode.isExcluded()) {
+			return true;
+		}
+		return getAllExclusions().contains(getSimpleArtifactId());
+	}
+
+	private Set<SimpleArtifactId> getAllExclusions() {
+		Set<SimpleArtifactId> result = new HashSet<SimpleArtifactId>();
+		if (parentNode != null) {
+			result.addAll(parentNode.getExclusions());
+			result.addAll(parentNode.getAllExclusions());
+		}
+		return result;
+	}
+
+	private SimpleArtifactId getSimpleArtifactId() {
+		return getFullMavenArtifactId().getMavenArtifactId().getSimpleArtifactId();
 	}
 
 	public String getPath() {
@@ -151,7 +177,14 @@ public class DependencyNode {
 	}
 
 	private DependencyNode copy(DependencyNode dependencyNode) {
-		return new DependencyNode(dependencyNode.getFullMavenArtifactId(), dependencyNode.getScope(), new HashSet<MavenArtifactId>());
+		return new DependencyNode(dependencyNode.getFullMavenArtifactId(), dependencyNode.getScope(), new HashSet<SimpleArtifactId>());
 	}
 
+	@Override
+	public String toString() {
+		if (parentNode == null) {
+			return this.fullMavenArtifactId.toString();
+		}
+		return String.format("%s > %s", parentNode.toString(), fullMavenArtifactId.toString());
+	}
 }

@@ -40,6 +40,10 @@ public class MavenArtifactId {
 		return type;
 	}
 
+	public SimpleArtifactId getSimpleArtifactId() {
+		return new SimpleArtifactId(groupId, artifactId);
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		return EqualsBuilder.reflectionEquals(this, obj);
@@ -54,4 +58,5 @@ public class MavenArtifactId {
 	public String toString() {
 		return new StringBuilder().append(groupId).append(":").append(artifactId).append(":").append(type).toString();
 	}
+
 }

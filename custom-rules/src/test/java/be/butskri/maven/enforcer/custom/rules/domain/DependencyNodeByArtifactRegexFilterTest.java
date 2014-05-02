@@ -38,6 +38,6 @@ public class DependencyNodeByArtifactRegexFilterTest {
 
 	private DependencyNode node(MavenArtifactId mavenArtifactId) {
 		return new DependencyNode(new FullMavenArtifactId(mavenArtifactId, "1.0.0"),
-				new HashSet<MavenArtifactId>());
+				new HashSet<SimpleArtifactId>());
 	}
 }
