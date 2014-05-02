@@ -14,6 +14,7 @@
 	</properties>
 
 	<modules>
+		<module>../parent-project-x</module>
 		<module>../project-x</module>
 		<module>../project-y</module>
 		<module>../project-z</module>

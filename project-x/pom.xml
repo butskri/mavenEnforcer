@@ -1,10 +1,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-
+	<parent>
+		<groupId>be.butskri.maven.enforcer</groupId>
+		<artifactId>parent-project-x</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>../parent-project-x</relativePath>
+	</parent>
 	<groupId>be.butskri.maven.enforcer</groupId>
 	<artifactId>project-x</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>project-x</name>
 
@@ -16,8 +20,6 @@
 		<dependency>
 			<groupId>be.butskri.maven.enforcer</groupId>
 			<artifactId>project-y</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-			<type>jar</type>
 		</dependency>
 		<dependency>
 			<groupId>be.butskri.maven.enforcer</groupId>
@@ -25,7 +27,21 @@
 			<version>0.0.1-SNAPSHOT</version>
 			<type>jar</type>
 		</dependency>
-		
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-aop</artifactId>
+			<version>3.2.5.RELEASE</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework</groupId>
+					<artifactId>spring-core</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-core</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -46,25 +62,14 @@
 						<artifactId>custom-rules</artifactId>
 						<version>1.0.0-SNAPSHOT</version>
 					</dependency>
-					<!-- 
-					<dependency>
-						<groupId>org.codehaus.plexus</groupId>
-						<artifactId>plexus-classworlds</artifactId>
-						<version>2.4</version>
-					</dependency>
-					<dependency>
-						<groupId>org.apache.maven</groupId>
-						<artifactId>maven-aether-provider</artifactId>
-						<version>3.2.1</version>
-					</dependency>
-					 -->
 				</dependencies>
 				<executions>
 					<execution>
 						<id>enforce-only-one-version-of-artifact-on-classpath</id>
 						<configuration>
 							<rules>
-								<myCustomRule implementation="be.butskri.maven.enforcer.custom.rules.FindDuplicateDependenciesWithDifferentVersions">
+								<myCustomRule
+									implementation="be.butskri.maven.enforcer.custom.rules.FindDuplicateDependenciesWithDifferentVersions">
 									<showTree>true</showTree>
 									<includePathsToBeChecked>
 										<pattern>*</pattern>
@@ -73,8 +78,7 @@
 										<pattern>none</pattern>
 									</excludePathsToBeChecked>
 									<includeDependenciesToBeChecked>
-										<pattern>com.google</pattern>
-										<pattern>junit</pattern>
+										<pattern>*</pattern>
 									</includeDependenciesToBeChecked>
 									<excludeDependenciesToBeChecked>
 										<pattern>none</pattern>
