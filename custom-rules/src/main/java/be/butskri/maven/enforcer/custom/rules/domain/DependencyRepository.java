@@ -57,7 +57,7 @@ public class DependencyRepository {
 	}
 
 	private List<Dependency> logAndReturn(Artifact artifact, ArtifactDescriptorResult descriptorResult) {
-		log.debug("gevonden dependencies voor " + artifact + ":");
+		log.debug("found dependencies for " + artifact + ":");
 		List<Dependency> result = descriptorResult.getDependencies();
 		for (Dependency dependency : result) {
 			log.debug(" " + dependency);

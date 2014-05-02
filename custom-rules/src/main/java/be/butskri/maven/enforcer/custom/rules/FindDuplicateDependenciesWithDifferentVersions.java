@@ -12,6 +12,7 @@ import org.codehaus.plexus.component.configurator.expression.ExpressionEvaluatio
 
 import be.butskri.maven.enforcer.custom.rules.appender.LogLevel;
 import be.butskri.maven.enforcer.custom.rules.appender.LoggingStringAppender;
+import be.butskri.maven.enforcer.custom.rules.domain.CompositeDependencyNodeRepository;
 import be.butskri.maven.enforcer.custom.rules.domain.ConflictingArtifact;
 import be.butskri.maven.enforcer.custom.rules.domain.ConflictingArtifactsBuilder;
 import be.butskri.maven.enforcer.custom.rules.domain.DependencyNode;
@@ -21,6 +22,8 @@ import be.butskri.maven.enforcer.custom.rules.domain.DependencyRepository;
 import be.butskri.maven.enforcer.custom.rules.domain.FullDependencyTree;
 import be.butskri.maven.enforcer.custom.rules.domain.FullDependencyTreeBuilder;
 import be.butskri.maven.enforcer.custom.rules.domain.MavenArtifactIdRegexFilter;
+import be.butskri.maven.enforcer.custom.rules.domain.MavenProjectDependencyNodeRepository;
+import be.butskri.maven.enforcer.custom.rules.domain.ReleasedComponentDependencyNodeRepository;
 
 import com.google.common.base.Predicate;
 
@@ -71,12 +74,17 @@ public class FindDuplicateDependenciesWithDifferentVersions implements EnforcerR
 	private FullDependencyTree buildFullDependencyTree(EnforcerRuleHelper helper, MavenProject project) {
 		Log log = helper.getLog();
 		log.debug("building tree...");
-		DependencyNodeRepository dependencyNodeRepository = new DependencyNodeRepository(project,
-				DependencyRepository.getRepository(helper));
+		DependencyNodeRepository dependencyNodeRepository = buildDependencyNodeRepository(helper, project);
 		FullDependencyTree tree = new FullDependencyTreeBuilder(project, dependencyNodeRepository, pathsToBeCheckedFilter()).build();
 		log.debug("tree was built.");
 		printTree(log, tree);
 		return tree;
+	}
+
+	private DependencyNodeRepository buildDependencyNodeRepository(EnforcerRuleHelper helper, MavenProject project) {
+		return new CompositeDependencyNodeRepository(
+				new MavenProjectDependencyNodeRepository(project),
+				new ReleasedComponentDependencyNodeRepository(DependencyRepository.getRepository(helper)));
 	}
 
 	private void printTree(Log log, FullDependencyTree tree) {
