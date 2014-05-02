@@ -55,4 +55,8 @@ public class ConflictingArtifact {
 		return String.format("found versions for component %s: %s", getMavenArtifactId(), StringUtils.join(getAllVersions(), ","));
 	}
 
+	@Override
+	public String toString() {
+		return String.format("Conflicting artifact %s with versions %s", mavenArtifactId, StringUtils.join(getAllVersions(), ","));
+	}
 }
