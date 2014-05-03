@@ -194,4 +194,8 @@ public class DependencyNode {
 		}
 		return parentNode.hasInPath(getFullMavenArtifactId());
 	}
+
+	DependencyNode getParentNode() {
+		return parentNode;
+	}
 }

@@ -62,7 +62,7 @@ public class FindDuplicateDependenciesWithDifferentVersions implements EnforcerR
 			MavenProject project = (MavenProject) helper.evaluate("${project}");
 			FullDependencyTree tree = buildFullDependencyTree(helper, project);
 
-			Collection<ConflictingArtifact> conflictingArtifacts = findConflictingArtifacts(tree);
+			Collection<ConflictingArtifact> conflictingArtifacts = findConflictingArtifacts(project, tree);
 			if (!conflictingArtifacts.isEmpty()) {
 				throw new EnforcerRuleException(buildMessage(project, conflictingArtifacts));
 			}
@@ -112,8 +112,8 @@ public class FindDuplicateDependenciesWithDifferentVersions implements EnforcerR
 		return result.toString();
 	}
 
-	private Collection<ConflictingArtifact> findConflictingArtifacts(FullDependencyTree tree) {
-		return new ConflictingArtifactsBuilder(tree, dependenciesToBeCheckedFilter()).build();
+	private Collection<ConflictingArtifact> findConflictingArtifacts(MavenProject project, FullDependencyTree tree) {
+		return new ConflictingArtifactsBuilder(project, tree, dependenciesToBeCheckedFilter()).build();
 	}
 
 	private Predicate<DependencyNode> dependenciesToBeCheckedFilter() {

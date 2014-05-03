@@ -1,16 +1,41 @@
 package be.butskri.maven.enforcer.custom.rules.domain;
 
 import static org.fest.assertions.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.maven.model.Dependency;
+import org.apache.maven.model.DependencyManagement;
+import org.apache.maven.project.MavenProject;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.Lists;
 
 public class ConflictingArtifactsBuilderTest {
+
+	private static final String ROOT_FULL_MAVEN_ARTIFACT_ID = "be.butskri.example:rootArtifactId:jar:1.0.0";
+
+	@Mock
+	private MavenProject mavenProjectMock;
+	@Mock
+	private DependencyManagement dependencyManagementMock;
+
+	@Before
+	public void setUp() {
+		MockitoAnnotations.initMocks(this);
+		when(mavenProjectMock.getDependencyManagement()).thenReturn(dependencyManagementMock);
+		when(mavenProjectMock.getGroupId()).thenReturn("be.butskri.example");
+		when(mavenProjectMock.getArtifactId()).thenReturn("rootArtifactId");
+		when(mavenProjectMock.getPackaging()).thenReturn("jar");
+		when(mavenProjectMock.getVersion()).thenReturn("1.0.0");
+	}
 
 	@Test
 	public void canBuildConflictingArtifacts() {
@@ -40,7 +65,8 @@ public class ConflictingArtifactsBuilderTest {
 				.withDependentComponent(dependencyNode("someOtherUniqueGroupId:someOtherUniqueArtifactId:jar:4.0.0", "compile"));
 		FullDependencyTree fullTree = new FullDependencyTree(root);
 
-		Collection<ConflictingArtifact> conflictingArtifacts = new ConflictingArtifactsBuilder(fullTree, alwaysTruePredicate()).build();
+		Collection<ConflictingArtifact> conflictingArtifacts = new ConflictingArtifactsBuilder(mavenProjectMock, fullTree,
+				alwaysTruePredicate()).build();
 		assertThat(conflictingArtifacts).hasSize(2);
 
 		assertConflictingArtifact(conflictingArtifacts, "conflictingGroupId:conflictingArtifactId:jar", conflictingNode11,
@@ -64,8 +90,53 @@ public class ConflictingArtifactsBuilderTest {
 				.withDependentComponent(dependentComponent2);
 		FullDependencyTree fullTree = new FullDependencyTree(root);
 
-		Collection<ConflictingArtifact> conflictingArtifacts = new ConflictingArtifactsBuilder(fullTree, alwaysTruePredicate()).build();
+		Collection<ConflictingArtifact> conflictingArtifacts = new ConflictingArtifactsBuilder(mavenProjectMock, fullTree,
+				alwaysTruePredicate()).build();
 		assertThat(conflictingArtifacts).isEmpty();
+	}
+
+	@Test
+	public void dependencyManagementIsAlsoTakenIntoAccountWhenFindingConflictingVersions() {
+		Dependency dependency = dependency("be.butskri.example", "c", "jar", "2.0.0");
+		when(dependencyManagementMock.getDependencies()).thenReturn(Lists.newArrayList(dependency));
+		DependencyNode componentC = dependencyNode("be.butskri.example:c:jar:1.0.0", "compile");
+		DependencyNode componentA = dependencyNode("be.butskri.example:a:jar:1.0.0", "compile")
+				.withDependentComponent(dependencyNode("be.butskri.example:b:jar:1.0.0", "compile")
+						.withDependentComponent(componentC));
+		DependencyNode root = dependencyNode(ROOT_FULL_MAVEN_ARTIFACT_ID)
+				.withDependentComponent(componentA);
+		FullDependencyTree fullTree = new FullDependencyTree(root);
+
+		Collection<ConflictingArtifact> conflictingArtifacts = new ConflictingArtifactsBuilder(mavenProjectMock, fullTree,
+				alwaysTruePredicate()).build();
+		assertThat(conflictingArtifacts).hasSize(1);
+
+		ConflictingArtifact conflictingArtifact = conflictingArtifacts.iterator().next();
+		Collection<DependencyNode> conflictingNodes = conflictingArtifact.getConflictingNodes();
+		assertThat(conflictingNodes).hasSize(2);
+		assertThat(conflictingNodes).contains(componentC);
+		DependencyNode depMgtComponentC = findNodeById(conflictingNodes, "be.butskri.example:c:jar:2.0.0");
+		assertThat(depMgtComponentC.getScope()).isEqualTo("depMgt");
+		assertThat(depMgtComponentC.getParentNode().getFullMavenArtifactId().toString()).isEqualTo(ROOT_FULL_MAVEN_ARTIFACT_ID);
+		assertThat(depMgtComponentC.getParentNode().getParentNode()).isNull();
+	}
+
+	private DependencyNode findNodeById(Collection<DependencyNode> nodes, String fullMavenArtifactId) {
+		for (DependencyNode dependencyNode : nodes) {
+			if (dependencyNode.getFullMavenArtifactId().toString().equals(fullMavenArtifactId)) {
+				return dependencyNode;
+			}
+		}
+		return null;
+	}
+
+	private Dependency dependency(String groupId, String artifactId, String type, String version) {
+		Dependency result = new Dependency();
+		result.setGroupId(groupId);
+		result.setArtifactId(artifactId);
+		result.setType(type);
+		result.setVersion(version);
+		return result;
 	}
 
 	private Predicate<DependencyNode> alwaysTruePredicate() {
@@ -100,11 +171,6 @@ public class ConflictingArtifactsBuilderTest {
 	private DependencyNode dependencyNode(String fullMavenArtifactId) {
 		return new DependencyNode(FullMavenArtifactId.fromString(fullMavenArtifactId),
 				new HashSet<SimpleArtifactId>());
-	}
-
-	private DependencyNode dependencyNode(String fullMavenArtifactId, String scope, String... excludedArtifactIds) {
-		Set<SimpleArtifactId> exclusions = excluding(excludedArtifactIds);
-		return dependencyNode(fullMavenArtifactId, scope, exclusions);
 	}
 
 	private DependencyNode dependencyNode(String fullMavenArtifactId, String scope, Set<SimpleArtifactId> exclusions) {
