@@ -8,7 +8,6 @@ import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleHelper;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
-import org.codehaus.plexus.component.configurator.expression.ExpressionEvaluationException;
 
 import be.butskri.maven.enforcer.custom.rules.appender.LogLevel;
 import be.butskri.maven.enforcer.custom.rules.appender.LoggingStringAppender;
@@ -18,6 +17,7 @@ import be.butskri.maven.enforcer.custom.rules.domain.ConflictingArtifactsBuilder
 import be.butskri.maven.enforcer.custom.rules.domain.DependencyNode;
 import be.butskri.maven.enforcer.custom.rules.domain.DependencyNodeByArtifactRegexFilter;
 import be.butskri.maven.enforcer.custom.rules.domain.DependencyNodeRepository;
+import be.butskri.maven.enforcer.custom.rules.domain.EnforcerRuleUtils;
 import be.butskri.maven.enforcer.custom.rules.domain.FullDependencyTree;
 import be.butskri.maven.enforcer.custom.rules.domain.FullDependencyTreeBuilder;
 import be.butskri.maven.enforcer.custom.rules.domain.MavenArtifactIdRegexFilter;
@@ -56,32 +56,27 @@ public class FindDuplicateDependenciesWithDifferentVersions implements EnforcerR
 	}
 
 	public void execute(EnforcerRuleHelper helper) throws EnforcerRuleException {
-		try {
-			MavenProject project = (MavenProject) helper.evaluate("${project}");
-			FullDependencyTree tree = buildFullDependencyTree(helper, project);
+		MavenProject project = EnforcerRuleUtils.mavenProjectFrom(helper);
+		FullDependencyTree tree = buildFullDependencyTree(helper, project);
 
-			Collection<ConflictingArtifact> conflictingArtifacts = findConflictingArtifacts(project, tree);
-			if (!conflictingArtifacts.isEmpty()) {
-				throw new EnforcerRuleException(buildMessage(project, conflictingArtifacts));
-			}
-		} catch (ExpressionEvaluationException e) {
-			helper.getLog().error(String.format("problem evaluating expression ${project}"), e);
+		Collection<ConflictingArtifact> conflictingArtifacts = findConflictingArtifacts(project, tree);
+		if (!conflictingArtifacts.isEmpty()) {
+			throw new EnforcerRuleException(buildMessage(project, conflictingArtifacts));
 		}
 	}
 
 	private FullDependencyTree buildFullDependencyTree(EnforcerRuleHelper helper, MavenProject project) {
 		Log log = helper.getLog();
 		log.debug("building tree...");
-		DependencyNodeRepository dependencyNodeRepository = buildDependencyNodeRepository(helper, project);
+		DependencyNodeRepository dependencyNodeRepository = buildDependencyNodeRepository(helper);
 		FullDependencyTree tree = new FullDependencyTreeBuilder(project, dependencyNodeRepository, pathsToBeCheckedFilter()).build();
 		log.debug("tree was built.");
 		printTree(log, tree);
 		return tree;
 	}
 
-	private DependencyNodeRepository buildDependencyNodeRepository(EnforcerRuleHelper helper, MavenProject project) {
-		return new CompositeDependencyNodeRepository(
-				new MavenProjectDependencyNodeRepository(helper, project));
+	private DependencyNodeRepository buildDependencyNodeRepository(EnforcerRuleHelper helper) {
+		return new CompositeDependencyNodeRepository(new MavenProjectDependencyNodeRepository(helper));
 	}
 
 	private void printTree(Log log, FullDependencyTree tree) {
